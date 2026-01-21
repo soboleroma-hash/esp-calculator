@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#1a2a3a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ESP Calculator" />
+  <title>ESP Calculator NB(2000-3100)H v32+++</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; padding: 0; background: radial-gradient(circle at top, #1a2a3a, #050914); color: #f5f5f5; font-size: 14px; -webkit-user-select: none; user-select: none; }
+    .container { max-width: 1200px; margin: 8px auto; padding: 12px; background: rgba(10,15,30,0.97); border-radius: 16px; box-shadow: 0 16px 30px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.05); }
+    h1 { margin: 0 0 10px 0; font-size: 18px; text-align: center; letter-spacing: 0.04em; color: #e0e6ff; font-weight: 600; }
+    .layout { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 900px) { .layout { grid-template-columns: 350px 1fr; gap: 16px; } }
+    .panel { background: linear-gradient(145deg, rgba(20,28,48,0.98), rgba(8,12,24,0.98)); border-radius: 12px; padding: 12px 14px; border: 1px solid rgba(255,255,255,0.06); }
+    .panel h2 { font-size: 14px; margin: 0 0 8px 0; color: #cdd7ff; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; font-weight: 600; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 12px; margin-bottom: 4px; color: #a9b5d9; font-weight: 500; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    select, input[type="number"], input[type="text"] { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(7,11,22,0.95); color: #f5f5f5; font-size: 13px; outline: none; transition: all 0.2s; -webkit-appearance: none; }
+    select:focus, input[type="number"]:focus, input[type="text"]:focus { border-color: #4f8bff; box-shadow: 0 0 0 2px rgba(79,139,255,0.2); }
+    .btn { display: inline-block; padding: 9px 12px; border-radius: 6px; border: none; font-size: 13px; font-weight: 500; cursor: pointer; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; transition: all 0.2s; text-align: center; -webkit-user-select: none; touch-action: manipulation; }
+    .btn.secondary { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    .btn.full { width: 100%; }
+    .btn:active { transform: scale(0.98); }
+    .btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .btn-row .btn { flex: 1; }
+    .results-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 12px; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.06); padding: 4px 0; }
+    .result-row span:first-child { color: #9ca3af; font-size: 11px; }
+    .result-row span:last-child { color: #e5e7eb; font-weight: 600; font-size: 12px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge.red { background: rgba(239, 68, 68, 0.2); color: #fecaca; }
+    .badge.orange { background: rgba(245, 158, 11, 0.2); color: #fde68a; }
+    .badge.yellow { background: rgba(234, 179, 8, 0.2); color: #fef9c3; }
+    .badge.green { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
+    .bep-info { background: rgba(34, 197, 94, 0.15); border-left: 3px solid #22c55e; padding: 8px 10px; border-radius: 4px; margin-top: 6px; font-size: 11px; }
+    .eff-zone-row { margin-top: 6px; font-size: 12px; color: #cbd5f5; }
+    .status-row { margin-top: 4px; font-size: 12px; color: #e5e7eb; }
+    .status-ok { color: #4ade80; font-weight: 600; }
+    .status-bad { color: #f97373; font-weight: 600; }
+    .chart-container { position: relative; height: 380px; width: 100%; background: rgba(0, 0, 0, 0.2); border-radius: 8px; padding: 8px; }
+    .chart-container canvas { cursor: crosshair; display: block; touch-action: none; }
+    .legend-zones { margin-top: 6px; font-size: 11px; color: #9ca3af; display: flex; flex-wrap: wrap; gap: 10px; }
+    .legend-zones span { display: flex; align-items: center; gap: 4px; }
+    .legend-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-color.red { background: #ef4444; }
+    .legend-color.orange { background: #f97316; }
+    .legend-color.yellow { background: #eab308; }
+    .legend-color.green { background: #22c55e; }
+    .legend-color.blue { background: #3b82f6; }
+    hr { border: none; border-top: 1px solid rgba(255, 255, 255, 0.06); margin: 10px 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>ESP Calculator NB(2000-3100)H v32+++</h1>
+  <div class="layout">
+    <div class="panel">
+      <h2>Well parameters</h2>
+      <div class="form-group">
+        <label for="wellSelect">📋 Well list</label>
+        <select id="wellSelect">
+          <option value="">-- Loading wells... --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="wellName">Name (for saving)</label>
+        <input type="text" id="wellName" placeholder="e.g. SFNY 400" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="freqInput">Frequency, Hz</label>
+          <input type="number" id="freqInput" min="30" max="90" step="0.01" value="73" />
+        </div>
+        <div class="form-group">
+          <label for="densityInput">Density, kg/m³</label>
+          <input type="number" id="densityInput" min="600" max="1200" step="0.1" value="882" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="stagesInput">Stages, STG</label>
+        <input type="number" id="stagesInput" min="1" max="300" step="1" value="100" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="piInput">Pi, psi</label>
+          <input type="number" id="piInput" step="0.01" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label for="pdInput">Pd, psi</label>
+          <input type="number" id="pdInput" step="0.01" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fvfInput">FVF</label>
+          <input type="number" id="fvfInput" min="0.1" max="2" step="0.01" value="1.0" />
+        </div>
+        <div class="form-group">
+          <label for="wcInput">WC, %</label>
+          <input type="number" id="wcInput" min="0" max="100" step="1" value="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="oilDensityInput">Oil ρ, kg/m³</label>
+          <input type="number" id="oilDensityInput" min="700" max="950" step="0.1" value="882" />
+        </div>
+      </div>
+      <div class="form-group">
+        <button class="btn full" id="applyDPBtn">Apply Pi/Pd → point</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="saveWellBtn">Save well</button>
+        <button class="btn secondary" id="deleteWellBtn">Delete</button>
+      </div>
+      <hr />
+      <h2>Working point</h2>
+      <div class="results-grid">
+        <div class="result-row"><span>Flow (BPD)</span><span id="resultFlow">—</span></div>
+        <div class="result-row"><span>Head (psi)</span><span id="resultHead">—</span></div>
+        <div class="result-row"><span>Power (HP)</span><span id="resultPower">—</span></div>
+        <div class="result-row"><span>Efficiency (%)</span><span id="resultEff">—</span></div>
+        <div class="result-row"><span>DP (psi)</span><span id="resultDP">—</span></div>
+        <div class="result-row"><span>Hz / ρ / STG</span><span id="resultParams">—</span></div>
+        <div class="result-row"><span>Q Surface (BPD)</span><span id="resultQSurface">—</span></div>
+        <div class="result-row"><span>Q Water (BPD)</span><span id="resultQWater">—</span></div>
+        <div class="result-row"><span>Q Oil (BPD)</span><span id="resultQOil">—</span></div>
+      </div>
+      <div class="bep-info">
+        <div style="color: #86efac; font-weight: 600; margin-bottom: 4px;">BEP & Range</div>
+        <div class="result-row"><span>BEP (BPD)</span><span id="bepFlowValue">—</span></div>
+        <div class="result-row"><span>BEP Eff (%)</span><span id="bepEffValue">70.0</span></div>
+        <div class="result-row"><span>Min (BPD)</span><span id="bepMinValue">—</span></div>
+        <div class="result-row"><span>Max (BPD)</span><span id="bepMaxValue">—</span></div>
+      </div>
+      <div class="eff-zone-row">Efficiency: <span id="effZoneBadge" class="badge">—</span></div>
+      <div class="status-row">Range status: <span id="rangeStatus" class="status-bad">—</span></div>
+      <div class="legend-zones">
+        <span><span class="legend-color red"></span>Low</span>
+        <span><span class="legend-color orange"></span>Norm</span>
+        <span><span class="legend-color yellow"></span>Good</span>
+        <span><span class="legend-color green"></span>Opt</span>
+        <span><span class="legend-color blue"></span>BEP</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Pump Curves — Head / Eff / Power</h2>
+      <div class="chart-container">
+        <canvas id="espChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const baseFlow = [49, 143, 314, 438, 547, 687, 718, 999, 1216, 1403, 1605, 1886, 2088, 2321, 2461, 2601, 2788, 2944, 3099, 3271, 3380, 3488, 3551, 3691, 3769, 3893, 4018, 4189, 4360, 4469];
+const baseHead = [900.5, 889.2, 867.2, 851.4, 838.3, 823.0, 819.9, 797.5, 787.0, 782.2, 780.2, 779.4, 777.1, 769.1, 760.0, 746.6, 721.1, 691.9, 655.0, 604.6, 567.2, 525.6, 499.9, 437.5, 400.1, 336.7, 269.4, 172.0, 71.7, 8.0];
+const basePower = [23.223, 23.254, 23.635, 24.151, 24.752, 25.710, 25.949, 28.463, 30.784, 32.950, 35.408, 38.870, 41.314, 43.969, 45.435, 46.775, 48.326, 49.378, 50.177, 50.726, 50.877, 50.861, 50.773, 50.352, 49.980, 49.165, 48.067, 46.068, 43.467, 41.479];
+const baseEfficiency = [3, 9, 19, 26, 31, 36, 38, 47, 53, 57, 61, 65, 67, 69, 70, 70, 70, 70, 68, 66, 64, 61, 59, 55, 52, 46, 39, 27, 12, 1];
+
+const BASE_HZ = 69, BASE_DENSITY = 900, BASE_STAGES = 104;
+const BEP_MIN_FACTOR = 0.76, BEP_MAX_FACTOR = 1.26;
+const DENSE_POINTS = 500;
+
+function getBEPv32(hz) {
+  const BEP_AT_70HZ = 2696;
+  const GRADIENT = 37.9;
+  return BEP_AT_70HZ + GRADIENT * (hz - 70);
+}
+
+class CubicSpline {
+  constructor(x, y) { this.x = x; this.y = y; this.n = x.length; this.m = new Array(this.n).fill(0); this.compute(); }
+  compute() {
+    if (this.n < 2) return;
+    const h = [], alpha = [];
+    for (let i = 0; i < this.n - 1; i++) {
+      h[i] = this.x[i + 1] - this.x[i];
+      if (i > 0) alpha[i] = 3 / h[i] * (this.y[i + 1] - this.y[i]) - 3 / h[i - 1] * (this.y[i] - this.y[i - 1]);
+    }
+    const l = new Array(this.n).fill(1), mu = new Array(this.n - 1).fill(0), z = new Array(this.n).fill(0);
+    for (let i = 1; i < this.n - 1; i++) { l[i] = 2 * (this.x[i + 1] - this.x[i - 1]) - h[i - 1] * mu[i - 1]; mu[i] = h[i] / l[i]; z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i]; }
+    for (let i = this.n - 2; i >= 0; i--) this.m[i] = z[i] - mu[i] * this.m[i + 1];
+  }
+  evaluate(x) {
+    if (this.n < 1) return 0;
+    let i = 0;
+    while (i < this.n - 1 && x > this.x[i + 1]) i++;
+    const h = this.x[i + 1] - this.x[i];
+    if (Math.abs(h) < 1e-10) return this.y[i];
+    const s = (x - this.x[i]) / h;
+    return this.y[i] * (1 - s) + this.y[i + 1] * s + h * h / 6 * (this.m[i] * (1 - s) * (1 - s * 2) + this.m[i + 1] * s * (3 * s - 2));
+  }
+}
+
+let splineHead, splinePower, splineEff;
+
+function buildInterpolators() {
+  splineHead = new CubicSpline(baseFlow, baseHead);
+  splinePower = new CubicSpline(baseFlow, basePower);
+  splineEff = new CubicSpline(baseFlow, baseEfficiency);
+}
+buildInterpolators();
+
+const defaultWells = [
+  { name: "SFNY 164", hz: 73.00, density: 882, stages: 100, fvf: 1.0, wc: 0, oil_density: 882 },
+  { name: "SFNY 182", hz: 75.00, density: 882, stages: 104, fvf: 1.06, wc: 0, oil_density: 882 },
+  { name: "SFNY 179", hz: 63.85, density: 889, stages: 208, fvf: 1.06, wc: 0, oil_density: 889 },
+  { name: "SFNY 160", hz: 80.00, density: 910, stages: 104, fvf: 1.0, wc: 0, oil_density: 910 },
+  { name: "SFNY 162", hz: 69.00, density: 910, stages: 104, fvf: 1.0, wc: 0, oil_density: 910 },
+  { name: "SFNY 273", hz: 85.00, density: 910, stages: 104, fvf: 1.0, wc: 0, oil_density: 910 },
+  { name: "SFNY 257", hz: 82.00, density: 885.3, stages: 104, fvf: 1.06, wc: 2, oil_density: 882.939 },
+  { name: "SFNY 234", hz: 74.00, density: 884.6, stages: 104, fvf: 1.09, wc: 0, oil_density: 884.596 },
+  { name: "SFNY 239", hz: 75.00, density: 889, stages: 156, fvf: 1.09, wc: 0, oil_density: 889 },
+  { name: "SFNY 217", hz: 70.00, density: 894.5, stages: 104, fvf: 1.112, wc: 5, oil_density: 889 },
+  { name: "SFNY 313", hz: 62.50, density: 887.4, stages: 152, fvf: 1.07, wc: 0, oil_density: 887.373 },
+  { name: "SFNY 293", hz: 82.00, density: 887.4, stages: 104, fvf: 1.122, wc: 0, oil_density: 887.373 },
+  { name: "SFNY 298", hz: 78.00, density: 933.1, stages: 104, fvf: 1.09, wc: 40, oil_density: 888.488 },
+  { name: "SFNY 322", hz: 86.00, density: 988.6, stages: 104, fvf: 1.2, wc: 90, oil_density: 886.26 },
+  { name: "SFNY 215", hz: 78.50, density: 900, stages: 104, fvf: 1.0, wc: 0, oil_density: 900 }
+];
+
+const LS_KEY = "esp_v32plusplus_v3_wells";
+function loadWells() {
+  try { 
+    const s = sessionStorage.getItem(LS_KEY); 
+    if (s) return JSON.parse(s); 
+  } catch (e) { }
+  const initial = JSON.parse(JSON.stringify(defaultWells));
+  try { sessionStorage.setItem(LS_KEY, JSON.stringify(initial)); } catch (e) { }
+  return initial;
+}
+function saveWells(ws) { 
+  try { sessionStorage.setItem(LS_KEY, JSON.stringify(ws)); } catch (e) { } 
+}
+
+let wells = loadWells();
+
+const wellSelect = document.getElementById("wellSelect"), wellNameInput = document.getElementById("wellName"),
+  freqInput = document.getElementById("freqInput"), densityInput = document.getElementById("densityInput"),
+  stagesInput = document.getElementById("stagesInput"), piInput = document.getElementById("piInput"),
+  pdInput = document.getElementById("pdInput"), fvfInput = document.getElementById("fvfInput"),
+  wcInput = document.getElementById("wcInput"), oilDensityInput = document.getElementById("oilDensityInput"),
+  saveWellBtn = document.getElementById("saveWellBtn"),
+  deleteWellBtn = document.getElementById("deleteWellBtn"), applyDPBtn = document.getElementById("applyDPBtn"),
+  rangeStatusEl = document.getElementById("rangeStatus"),
+  resultFlowEl = document.getElementById("resultFlow"), resultHeadEl = document.getElementById("resultHead"),
+  resultPowerEl = document.getElementById("resultPower"), resultEffEl = document.getElementById("resultEff"),
+  resultDPEl = document.getElementById("resultDP"), resultParamsEl = document.getElementById("resultParams"),
+  effZoneBadge = document.getElementById("effZoneBadge"),
+  bepFlowEl = document.getElementById("bepFlowValue"),
+  bepMinEl = document.getElementById("bepMinValue"),
+  bepMaxEl = document.getElementById("bepMaxValue");
+
+function formatWellOption(w) { return `${w.name} — ${w.hz.toFixed(2)} Hz / ${w.density.toFixed(1)} ρ / ${w.stages} STG`; }
+
+function populateWells() {
+  wellSelect.innerHTML = "";
+  const optCustom = document.createElement("option");
+  optCustom.value = "__custom__"; optCustom.textContent = "— Custom —";
+  wellSelect.appendChild(optCustom);
+  wells.forEach((w, i) => {
+    const o = document.createElement("option");
+    o.value = String(i); o.textContent = formatWellOption(w);
+    wellSelect.appendChild(o);
+  });
+}
+
+function applyWell(i) {
+  if (i < 0 || i >= wells.length) return;
+  const w = wells[i];
+  freqInput.value = w.hz;
+  stagesInput.value = w.stages;
+  wellNameInput.value = w.name;
+  piInput.value = ""; pdInput.value = "";
+  fvfInput.value = w.fvf || 1.0;
+  oilDensityInput.value = w.oil_density || 882;
+  wcInput.value = w.wc || 0;
+  // Calculate mixture density
+  const oil_rho = parseFloat(oilDensityInput.value) || 882;
+  const wc = parseFloat(wcInput.value) || 0;
+  const water_rho = 1000;
+  const mix_rho = oil_rho * (1 - wc/100) + water_rho * (wc/100);
+  densityInput.value = mix_rho.toFixed(1);
+  pointLocked = false;
+  updateAll();
+}
+
+wellSelect.addEventListener("change", () => {
+  const v = wellSelect.value;
+  if (v === "__custom__") return;
+  applyWell(parseInt(v, 10));
+});
+
+saveWellBtn.addEventListener("click", () => {
+  const name = wellNameInput.value.trim();
+  if (!name) { alert("Enter well name"); return; }
+  const hz = parseFloat(freqInput.value), rho = parseFloat(densityInput.value), stg = parseInt(stagesInput.value, 10);
+  if (!isFinite(hz) || !isFinite(rho) || !isFinite(stg)) { alert("Invalid Hz / ρ / STG"); return; }
+  const fvf = parseFloat(fvfInput.value) || 1.0;
+  const wc = parseFloat(wcInput.value) || 0;
+  const oil_density = parseFloat(oilDensityInput.value) || 882;
+  let idx = wells.findIndex(w => w.name === name);
+  const obj = { name, hz, density: rho, stages: stg, fvf, wc, oil_density };
+  if (idx >= 0) wells[idx] = obj; else wells.push(obj);
+  saveWells(wells); populateWells();
+  const newIdx = wells.findIndex(w => w.name === name);
+  if (newIdx >= 0) wellSelect.value = String(newIdx);
+});
+
+deleteWellBtn.addEventListener("click", () => {
+  const v = wellSelect.value;
+  if (v === "__custom__") { alert("Select a well to delete"); return; }
+  const idx = parseInt(v, 10);
+  if (isNaN(idx) || idx < 0 || idx >= wells.length) return;
+  const name = wells[idx].name;
+  if (!confirm(`Delete "${name}"?`)) return;
+  wells.splice(idx, 1);
+  saveWells(wells); populateWells();
+  wellSelect.value = "__custom__";
+  wellNameInput.value = "";
+});
+
+function computePowerCoeffFromBase() {
+  let sumK = 0, cnt = 0;
+  for (let i = 0; i < baseFlow.length; i++) {
+    const q = baseFlow[i], h = baseHead[i], p = basePower[i], effPct = baseEfficiency[i], eff = effPct / 100;
+    if (p > 0.1 && eff > 0.01 && eff <= 1 && isFinite(q) && isFinite(h)) {
+      const K = q * h / (p * eff);
+      if (isFinite(K) && K > 10000) { sumK += K; cnt++; }
+    }
+  }
+  return cnt > 0 ? sumK / cnt : 58820;
+}
+
+const POWER_COEFF = computePowerCoeffFromBase();
+
+function calcPowerFromQH(qBpd, headPsi, effPercent) {
+  const eff = Math.max(0.01, Math.min(100, effPercent)) / 100;
+  if (!isFinite(qBpd) || !isFinite(headPsi) || !isFinite(eff) || eff < 0.01 || qBpd < 1) return 0;
+  return qBpd * headPsi / (POWER_COEFF * eff);
+}
+
+let scaledFlow = [], scaledHead = [], scaledPower = [], scaledEff = [];
+let lastRange = { min: null, max: null, bep: null };
+
+function recalcScaledCurves(hz, rho, stg) {
+  const hzR = hz / BASE_HZ, densR = rho / BASE_DENSITY, stgR = stg / BASE_STAGES;
+  
+  scaledFlow = [];
+  scaledHead = [];
+  scaledPower = [];
+  scaledEff = [];
+  
+  const minQ = baseFlow[0], maxQ = baseFlow[baseFlow.length - 1];
+  
+  for (let i = 0; i < DENSE_POINTS; i++) {
+    const t = i / (DENSE_POINTS - 1);
+    const baseQ = minQ + (maxQ - minQ) * t;
+    
+    const baseH = splineHead.evaluate(baseQ);
+    const baseP = splinePower.evaluate(baseQ);
+    const baseE = splineEff.evaluate(baseQ);
+    
+    const scaledQ = baseQ * hzR;
+    const scaledH = baseH * hzR * hzR * stgR * densR;
+    const scaledE = baseE;
+    const scaledP = calcPowerFromQH(scaledQ, scaledH, scaledE);
+    
+    if (isFinite(scaledQ) && isFinite(scaledH) && isFinite(scaledE) && isFinite(scaledP)) {
+      scaledFlow.push(scaledQ);
+      scaledHead.push(scaledH);
+      scaledPower.push(scaledP);
+      scaledEff.push(scaledE);
+    }
+  }
+}
+
+let espChart, pointLocked = false;
+const headDataset = { label: "Head (psi)", data: [], borderColor: "rgba(59,130,246,1)", backgroundColor: "rgba(59,130,246,0.08)", borderWidth: 3, tension: 0.4, pointRadius: 0, yAxisID: "yHead", fill: true };
+const effDataset = { label: "Efficiency (%)", data: [], borderColor: "rgba(16,185,129,1)", backgroundColor: "rgba(16,185,129,0.06)", borderWidth: 3, tension: 0.4, pointRadius: 0, yAxisID: "yEff", fill: true };
+const powerDataset = { label: "Power (HP)", data: [], borderColor: "rgba(249,115,22,1)", backgroundColor: "rgba(249,115,22,0.06)", borderWidth: 3, tension: 0.4, pointRadius: 0, yAxisID: "yPower", fill: true };
+const opPointDataset = { label: "Operating Point", data: [], borderColor: "rgba(239,68,68,1)", backgroundColor: "rgba(239,68,68,1)", borderWidth: 0, pointRadius: 7, pointHoverRadius: 8, showLine: false, yAxisID: "yHead" };
+
+function initChart() {
+  const ctx = document.getElementById("espChart");
+  if (!ctx) return;
+  const canvasEl = ctx.getContext("2d");
+  if (!canvasEl) return;
+  espChart = new Chart(canvasEl, {
+    type: "line",
+    data: { datasets: [headDataset, effDataset, powerDataset, opPointDataset] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: false },
+      plugins: { legend: { display: true, labels: { color: "#e5e7eb", font: { size: 12 }, usePointStyle: true, padding: 15 } }, tooltip: { enabled: false } },
+      scales: {
+        x: { type: "linear", position: "bottom", title: { display: true, text: "Flow (BPD)", color: "#d1d5db", font: { size: 13, weight: "bold" } }, ticks: { color: "#9ca3af", font: { size: 11 } }, grid: { color: "rgba(55,65,81,0.3)" } },
+        yHead: { type: "linear", position: "left", title: { display: true, text: "Head (psi)", color: "#d1d5db", font: { size: 13, weight: "bold" } }, ticks: { color: "#9ca3af", font: { size: 11 } }, grid: { color: "rgba(55,65,81,0.3)" } },
+        yEff: { type: "linear", position: "left", title: { display: true, text: "Efficiency (%)", color: "#d1d5db", font: { size: 13, weight: "bold" } }, offset: true, ticks: { color: "#9ca3af", font: { size: 11 } }, grid: { drawOnChartArea: false } },
+        yPower: { type: "linear", position: "right", title: { display: true, text: "Power (HP)", color: "#d1d5db", font: { size: 13, weight: "bold" } }, ticks: { color: "#9ca3af", font: { size: 11 } }, grid: { drawOnChartArea: false } }
+      },
+      onHover: (e) => {
+        if (!pointLocked && espChart && espChart.scales && espChart.scales.x) {
+          const pos = Chart.helpers.getRelativePosition(e, espChart);
+          const xScale = espChart.scales.x;
+          const flow = xScale.getValueForPixel(pos.x);
+          if (isFinite(flow)) updateOperatingPointFromFlow(flow);
+        }
+      }
+    }
+  });
+  ctx.addEventListener("click", (e) => {
+    if (!espChart || !espChart.scales || !espChart.scales.x) return;
+    const pos = Chart.helpers.getRelativePosition(e, espChart);
+    const xScale = espChart.scales.x;
+    const flow = xScale.getValueForPixel(pos.x);
+    if (!pointLocked) { updateOperatingPointFromFlow(flow); pointLocked = true; ctx.style.cursor = "default"; }
+    else { pointLocked = false; ctx.style.cursor = "crosshair"; }
+  });
+}
+
+function updateChartData(hz) {
+  if (!scaledFlow.length || !espChart) return;
+  
+  // Обрезаем данные - убираем конец с высоким дебитом
+  const trimPercentage = 0.85;
+  const trimIndex = Math.floor(scaledFlow.length * trimPercentage);
+  
+  const trimmedFlow = scaledFlow.slice(0, trimIndex);
+  const trimmedHead = scaledHead.slice(0, trimIndex);
+  const trimmedPower = scaledPower.slice(0, trimIndex);
+  const trimmedEff = scaledEff.slice(0, trimIndex);
+  
+  headDataset.data = trimmedFlow.map((q, i) => ({ x: q, y: trimmedHead[i] }));
+  effDataset.data = trimmedFlow.map((q, i) => ({ x: q, y: trimmedEff[i] }));
+  powerDataset.data = trimmedFlow.map((q, i) => ({ x: q, y: trimmedPower[i] }));
+  
+  let maxH = 0;
+  for (let i = 0; i < trimmedHead.length; i++) if (trimmedHead[i] > maxH) maxH = trimmedHead[i];
+  const headMaxAxis = maxH * 1.08;
+  espChart.options.scales.yHead.min = 0;
+  espChart.options.scales.yHead.max = headMaxAxis;
+  espChart.options.scales.yEff.min = 0;
+  espChart.options.scales.yEff.max = 100;
+  espChart.options.scales.x.min = trimmedFlow[0] || 0;
+  espChart.options.scales.x.max = trimmedFlow[trimmedFlow.length - 1] || 5000;
+
+  const bepFlowv32 = getBEPv32(hz);
+  const flowRecMin = bepFlowv32 * BEP_MIN_FACTOR;
+  const flowRecMax = bepFlowv32 * BEP_MAX_FACTOR;
+  lastRange.bep = bepFlowv32;
+  lastRange.min = flowRecMin;
+  lastRange.max = flowRecMax;
+
+  const bepMin = { label: "Min range (0.76)", data: [{ x: flowRecMin, y: 0 }, { x: flowRecMin, y: headMaxAxis }], borderColor: "rgba(22,163,74,0.7)", borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, yAxisID: "yHead" };
+  const bepMax = { label: "Max range (1.26)", data: [{ x: flowRecMax, y: 0 }, { x: flowRecMax, y: headMaxAxis }], borderColor: "rgba(22,163,74,0.7)", borderWidth: 1.5, borderDash: [4, 4], pointRadius: 0, yAxisID: "yHead" };
+
+  bepFlowEl.textContent = bepFlowv32.toFixed(0);
+  bepMinEl.textContent = flowRecMin.toFixed(0);
+  bepMaxEl.textContent = flowRecMax.toFixed(0);
+
+  espChart.data.datasets = [effDataset, headDataset, powerDataset, opPointDataset, bepMin, bepMax];
+  espChart.update("none");
+}
+
+function effZone(e) {
+  if (!isFinite(e)) return { label: "—", cls: "" };
+  if (e < 35) return { label: "LOW", cls: "red" };
+  if (e < 55) return { label: "NORM", cls: "orange" };
+  if (e < 65) return { label: "GOOD", cls: "yellow" };
+  return { label: "OPTIMAL", cls: "green" };
+}
+
+function updateRangeStatus(flow) {
+  if (lastRange.min == null || lastRange.max == null || !isFinite(flow)) {
+    rangeStatusEl.textContent = "—"; rangeStatusEl.className = "status-bad"; return;
+  }
+  if (flow >= lastRange.min && flow <= lastRange.max) {
+    rangeStatusEl.textContent = "✓ ACCEPTABLE"; rangeStatusEl.className = "status-ok";
+  } else if (flow < lastRange.min) {
+    rangeStatusEl.textContent = "✗ TOO LOW"; rangeStatusEl.className = "status-bad";
+  } else {
+    rangeStatusEl.textContent = "✗ TOO HIGH"; rangeStatusEl.className = "status-bad";
+  }
+}
+
+function updateOperatingPointByIndex(idx) {
+  if (idx < 0 || idx >= scaledFlow.length) return;
+  const q = scaledFlow[idx], h = scaledHead[idx], p = scaledPower[idx], e = scaledEff[idx];
+  opPointDataset.data = [{ x: q, y: h }];
+  resultFlowEl.textContent = q.toFixed(0);
+  resultHeadEl.textContent = h.toFixed(1);
+  resultPowerEl.textContent = p.toFixed(2);
+  resultEffEl.textContent = e.toFixed(1);
+  resultDPEl.textContent = h.toFixed(1);
+
+  // Calculate Q surface, Q water, Q oil
+  const fvf = parseFloat(fvfInput.value) || 1.0;
+  const wc = parseFloat(wcInput.value) || 0;
+  const q_surface = q / fvf;
+  const q_water = q * (wc / 100);
+  const q_oil = q * (1 - wc / 100);
+  document.getElementById("resultQSurface").textContent = q_surface.toFixed(1);
+  document.getElementById("resultQWater").textContent = q_water.toFixed(1);
+  document.getElementById("resultQOil").textContent = q_oil.toFixed(1);
+  const hz = parseFloat(freqInput.value), rho = parseFloat(densityInput.value), stg = parseInt(stagesInput.value, 10);
+  resultParamsEl.textContent = `${hz.toFixed(2)} / ${rho.toFixed(1)} / ${stg}`;
+  const z = effZone(e);
+  effZoneBadge.textContent = z.label;
+  effZoneBadge.className = `badge ${z.cls}`;
+  updateRangeStatus(q);
+  if (espChart) espChart.update("none");
+}
+
+function updateOperatingPointFromFlow(flow) {
+  if (!scaledFlow.length || !isFinite(flow)) return;
+  let best = 0, diff = Math.abs(scaledFlow[0] - flow);
+  for (let i = 1; i < scaledFlow.length; i++) {
+    const d = Math.abs(scaledFlow[i] - flow);
+    if (d < diff) { diff = d; best = i; }
+  }
+  updateOperatingPointByIndex(best);
+}
+
+function getCurrentDPFromInputs() {
+  const hasPi = piInput.value.trim() !== "", hasPd = pdInput.value.trim() !== "";
+  if (!hasPi && !hasPd) return null;
+  const pi = hasPi ? parseFloat(piInput.value) : 0, pd = hasPd ? parseFloat(pdInput.value) : 0;
+  if (!isFinite(pi) || !isFinite(pd)) return null;
+  return pd - pi;
+}
+
+applyDPBtn.addEventListener("click", () => {
+  const dp = getCurrentDPFromInputs();
+  if (dp === null) { alert("Enter Pd or Pi/Pd"); return; }
+  pointLocked = true;
+  document.getElementById("espChart").style.cursor = "default";
+  let bestIdx = 0, minDiff = scaledHead.length > 0 ? Math.abs(scaledHead[0] - dp) : 999999;
+  for (let i = 1; i < scaledHead.length; i++) {
+    const d = Math.abs(scaledHead[i] - dp);
+    if (d < minDiff) { minDiff = d; bestIdx = i; }
+  }
+  if (scaledHead.length > 0) updateOperatingPointByIndex(bestIdx);
+});
+
+freqInput.addEventListener("change", () => { pointLocked = false; updateAll(); });
+densityInput.addEventListener("change", () => { pointLocked = false; updateAll(); });
+stagesInput.addEventListener("change", () => { pointLocked = false; updateAll(); });
+wcInput.addEventListener("change", () => {
+  const oil_rho = parseFloat(oilDensityInput.value) || 882;
+  const wc = parseFloat(wcInput.value) || 0;
+  const water_rho = 1000;
+  const mix_rho = oil_rho * (1 - wc/100) + water_rho * (wc/100);
+  densityInput.value = mix_rho.toFixed(1);
+  pointLocked = false;
+  updateAll();
+});
+oilDensityInput.addEventListener("change", () => {
+  const oil_rho = parseFloat(oilDensityInput.value) || 882;
+  const wc = parseFloat(wcInput.value) || 0;
+  const water_rho = 1000;
+  const mix_rho = oil_rho * (1 - wc/100) + water_rho * (wc/100);
+  densityInput.value = mix_rho.toFixed(1);
+  pointLocked = false;
+  updateAll();
+});
+wcInput.addEventListener("change", () => { 
+  // Recalculate mixture density when WC changes
+  const oil_rho = parseFloat(oilDensityInput.value) || 882;
+  const wc = parseFloat(wcInput.value) || 0;
+  const water_rho = 1000;
+  const mix_rho = oil_rho * (1 - wc/100) + water_rho * (wc/100);
+  densityInput.value = mix_rho.toFixed(1);
+  pointLocked = false;
+  updateAll();
+});
+oilDensityInput.addEventListener("change", () => {
+  // Recalculate mixture density when oil density changes
+  const oil_rho = parseFloat(oilDensityInput.value) || 882;
+  const wc = parseFloat(wcInput.value) || 0;
+  const water_rho = 1000;
+  const mix_rho = oil_rho * (1 - wc/100) + water_rho * (wc/100);
+  densityInput.value = mix_rho.toFixed(1);
+  pointLocked = false;
+  updateAll();
+});
+
+function updateAll() {
+  const hz = parseFloat(freqInput.value), rho = parseFloat(densityInput.value), stg = parseInt(stagesInput.value, 10);
+  if (!isFinite(hz) || !isFinite(rho) || !isFinite(stg)) return;
+  pointLocked = false;
+  recalcScaledCurves(hz, rho, stg);
+  updateChartData(hz);
+  const dp = getCurrentDPFromInputs();
+  if (dp !== null && isFinite(dp)) {
+    let bestIdx = 0, minDiff = scaledHead.length > 0 ? Math.abs(scaledHead[0] - dp) : 999999;
+    for (let i = 1; i < scaledHead.length; i++) {
+      const d = Math.abs(scaledHead[i] - dp);
+      if (d < minDiff) { minDiff = d; bestIdx = i; }
+    }
+    if (scaledHead.length > 0) updateOperatingPointByIndex(bestIdx);
+  } else {
+    const bepFlow = getBEPv32(hz);
+    updateOperatingPointFromFlow(bepFlow);
+  }
+}
+
+function init() {
+  if (typeof Chart === "undefined") { alert("❌ Chart.js not loaded!"); return; }
+  
+  populateWells();
+  if (wells.length > 0) applyWell(0);
+  else { freqInput.value = 73; densityInput.value = 882; stagesInput.value = 100; updateAll(); }
+
+  initChart();
+  updateAll();
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>
